@@ -1,0 +1,9 @@
+include ':flutter_lib'
+setBinding(new Binding([gradle: this]))
+evaluate(new File(
+  settingsDir,
+  'flutter_module/.android/include_flutter.groovy'
+))
+include ':app'
+rootProject.name = "flutter_component"
+include ':flutter_module'

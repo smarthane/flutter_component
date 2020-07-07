@@ -5,6 +5,7 @@
 这是一个基于Flutter开发的工程，然后将其打包成aar包发布maven，最终安卓原生工程只要和普通的依赖方式依赖一个aar包就可以进行集成来达到混合开发目的。
 
 ### 工程模块说明：
+- 本工程使用的flutter版本为: [v1.14.6-beta](https://flutter.dev/docs/development/tools/sdk/releases),注意不同flutter版本相关依赖类可能不兼容！
 - app: 此模块为集成aar(flutter_lib)来测试的host app。
 - flutter_lib： 安卓原生模块，用于编写原生代码或者与flutter有交互的代码。其依赖的是flutter_module,执行发布脚本，发布成一个aar到maven,最终原生工程依赖这个aar包。
 - flutter_module: flutter module，纯flutter开发代码。flutter官方集成flutter module到现有原生工程的方案。

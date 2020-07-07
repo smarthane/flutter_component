@@ -6,6 +6,7 @@
 #################################################
 
 import os
+import platform
 
 # 读取gradle.properties配置
 class Properties(object):
@@ -45,6 +46,7 @@ class BuildAarAndPublish(object) :
     # 修改flutter指定版本sdk路径
     properties = Properties("gradle.properties").getProperties()
     flutterSdkPath = properties['flutterSdkPath']
+    sysstr = platform.system()
 
     # 打包flutter_module为aar
     def buildModuleAar(self):
@@ -59,12 +61,19 @@ class BuildAarAndPublish(object) :
         isPublishLocal = self.properties['isPublishLocal']
         print('2. start uploadModuleAar ... isPublishLocal=' + isPublishLocal)
         if isPublishLocal == "false":
-           os.system("gradlew flutter_lib:clean publish")
+           if self.sysstr == "Windows":
+              os.system("gradlew flutter_lib:clean publish")
+           else:
+              os.system("./gradlew flutter_lib:clean publish")
+
 
     # 上传flutter_lib到maven私服
     def uploadLibAar(self):
-        print('3. start uploadLibAar ... ')
-        os.system("gradlew flutter_lib:clean uploadArchives")
+        print('3. start uploadLibAar ... ' + self.sysstr)
+        if self.sysstr == "Windows":
+           os.system("gradlew flutter_lib:clean uploadArchives")
+        else:
+           os.system("./gradlew flutter_lib:clean uploadArchives")
 
 if __name__ == '__main__':
     buildAar = BuildAarAndPublish()

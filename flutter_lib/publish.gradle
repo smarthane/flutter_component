@@ -28,63 +28,75 @@ uploadArchives {
     }
 }
 
-apply plugin: 'maven-publish'
+if (!isPublishLocal.toBoolean()) {
+    apply plugin: 'maven-publish'
 
-def moduleRepoDirs = new File(localRepoPath)
-if (!moduleRepoDirs.exists()) {
-    moduleRepoDirs.mkdirs()
-}
-def fileList = new ArrayList<File>()
-def fileMap = new HashMap<File, File>()
-moduleRepoDirs.eachFileRecurse {
-    if (it.name.endsWith('.aar') || it.name.endsWith('.pom')) {
-        fileList.add(it)
+    def moduleRepoDirs = new File(localRepoPath)
+    if (!moduleRepoDirs.exists()) {
+        moduleRepoDirs.mkdirs()
     }
-}
-def i = 0
-while (i < fileList.size()) {
-    fileMap.put(fileList.get(i), fileList.get(i+1))
-    i = i + 2
-}
+    def fileList = new ArrayList<File>()
+    def fileMap = new HashMap<File, File>()
+    moduleRepoDirs.eachFileRecurse {
+        if (it.name.endsWith('.aar') || it.name.endsWith('.pom')) {
+            fileList.add(it)
+        }
+    }
+    def i = 0
+    while (i < fileList.size()) {
+        if (fileList.get(i).name.endsWith('.aar')) {
+            fileMap.put(fileList.get(i), fileList.get(i+1))
+        } else if (fileList.get(i).name.endsWith('.pom')) {
+            fileMap.put(fileList.get(i+1), fileList.get(i))
+        }
+        i = i + 2
+    }
 
-publishing {
-    publications {
-        fileMap.each { entry ->
-            def project = new XmlParser().parse(entry.value)
-            def mGroupId = project.groupId.text()
-            def mArtifactId = project.artifactId.text()
-            def mVersion = project.version.text()
-            def taskId = mGroupId + "-" +mArtifactId + "-" + mVersion
-            publishing.publications.create(taskId, MavenPublication) {
-                artifact entry.key
-                groupId mGroupId
-                artifactId mArtifactId
-                version mVersion
-                pom.withXml {
-                    def dependenciesNode = asNode().appendNode('dependencies')
-                    project.dependencies.dependency.each {
-                        def itGroupId = it.groupId.text()
-                        def itArtifactId = it.artifactId.text()
-                        def itVersion = it.version.text()
-                        def itScope = it.scope.text()
-                        def dependencyNode = dependenciesNode.appendNode('dependency')
-                        dependencyNode.appendNode('groupId', itGroupId)
-                        dependencyNode.appendNode('artifactId', itArtifactId)
-                        dependencyNode.appendNode('version', itVersion)
-                        dependencyNode.appendNode('scope', itScope)
+    publishing {
+        publications {
+            fileMap.each { entry ->
+                println("-------------------------------------------------")
+                println("aar file --> " + entry.key)
+                println("pom file --> " + entry.value)
+                def project = new XmlParser().parse(entry.value)
+                def mGroupId = project.groupId.text()
+                def mArtifactId = project.artifactId.text()
+                def mVersion = project.version.text()
+                def taskId = mGroupId + "-" +mArtifactId + "-" + mVersion
+                publishing.publications.create(taskId, MavenPublication) {
+                    artifact entry.key
+                    groupId mGroupId
+                    artifactId mArtifactId
+                    version mVersion
+                    pom.withXml {
+                        def dependenciesNode = asNode().appendNode('dependencies')
+                        project.dependencies.dependency.each {
+                            def itGroupId = it.groupId.text()
+                            def itArtifactId = it.artifactId.text()
+                            def itVersion = it.version.text()
+                            def itScope = it.scope.text()
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', itGroupId)
+                            dependencyNode.appendNode('artifactId', itArtifactId)
+                            dependencyNode.appendNode('version', itVersion)
+                            dependencyNode.appendNode('scope', itScope)
+                        }
                     }
                 }
             }
         }
-    }
-    repositories {
-        maven {
-            url repoUrl
-            credentials {
-                username = nexusUsername
-                password = nexusPassword
+        repositories {
+            maven {
+                url repoUrl
+                credentials {
+                    username = nexusUsername
+                    password = nexusPassword
+                }
             }
         }
     }
 }
+
+
+
 
